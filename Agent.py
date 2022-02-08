@@ -8,7 +8,7 @@ import random
 import SymbolGenerator
 from threading import Thread
 import time
-
+import Board
 
 class Observer():
     _observers = []
@@ -51,48 +51,34 @@ class Event():
                 observer._observables[self.name](self.data)  
 
 class Agent(Observer, Thread) :
-    id_ = 1
-    id_agent = id_
-    symbol_agent = SymbolGenerator.getRandomSymbol()
-    # ligne sur laquelle se trouve l'agent
-    x = int()
-    # colonne sur laquelle se trouve l'agent
-    y = int()
-    x_fin = int()
-    y_fin = int()
-    position = [x,y]
-    position_init = [x,y]
-    position_final = [x_fin, y_fin]
-    
-    #un agent est un thread qui observe et qui est observé
-    #par les autres threads
-    
-    def __init__(self, x, y, x_fin, y_fin):
-        print("Agent "+ id_agent +" was created.")
-        Observer.__init__(self)
-        Thread.__init__(self)
+
+    def __init__(self, _grid, _id, _symbol, x_init, y_init, x, y, x_fin, y_fin):
+        self._grid = _grid
+        self._id = _id
+        self._symbol = _symbol
+        self.x_init = x_init
+        self.y_init = y_init
         self.x = x
         self.y = y
         self.x_fin = x_fin
         self.y_fin = y_fin
-
-    
-    def run(self):
-        #self.position = 
-        pass
+        print("Agent "+ _id +" was created.")
+        Observer.__init__(self)
+        Thread.__init__(self)
     
     def start():
-        if (Thread == null | Thread.is_alive == True) : 
-            Thread.run()
+        Thread.start()
             
     def stop() :
-        ThreadBol.set(False)
-        Thread.join(500)
+        Thread.terminate()
         
     def agent_is_moving(self, where):
         print("Agent is moving to "+where)
         
-            
+    def run():
+        if Thread.is_alive == True : 
+            Thread.run()
+    
     Thread.start()
     
 
