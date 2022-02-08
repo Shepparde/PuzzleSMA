@@ -6,39 +6,8 @@ Created on Tue Feb  8 11:22:01 2022
 """
 import random 
 import SymbolGenerator
-import threading
+from threading import Thread
 import time
-
-class Agent(Observer) :
-    id_agent = random.nextInt(),
-    symbol_agent = SymbolGenerator.getRandomSymbol(),
-    # ligne sur laquelle se trouve l'agent
-    x = int()
-    # colonne sur laquelle se trouve l'agent
-    y = int()
-    x_fin = int()
-    y_fin = int()
-    position = [x,y]
-    position_init = [x,y]
-    position_final = [x_fin, y_fin]
-    
-    #un agent est un thread qui observe et qui est observé
-    #par les autres threads
-    
-    def __init__(self):
-        print("Agent "+id_agent+" was created.")
-        Observer.__init__(self)
-        
-    def start():
-        if (thread == null | thread?.isAlive == True) : 
-            thread = thread.run()
-            
-    def stop() :
-        threadBol.set(False)
-        thread?.join(500)
-        
-    def agent_is_moving(self, where):
-        print("Agent is moving to "+where)
 
 
 class Observer():
@@ -69,5 +38,62 @@ class Observer():
         except ValueError : 
             pass
 
+# Event quand l'agent se déplace
+class Event():
+    def __init__(self, name, data, autofire = True):
+        self.name = name
+        self.data = data
+        if autofire:
+            self.fire()
+    def fire(self):
+        for observer in Observer._observers:
+            if self.name in observer._observables:
+                observer._observables[self.name](self.data)  
+
+class Agent(Observer, Thread) :
+    id_ = 1
+    id_agent = id_
+    symbol_agent = SymbolGenerator.getRandomSymbol()
+    # ligne sur laquelle se trouve l'agent
+    x = int()
+    # colonne sur laquelle se trouve l'agent
+    y = int()
+    x_fin = int()
+    y_fin = int()
+    position = [x,y]
+    position_init = [x,y]
+    position_final = [x_fin, y_fin]
+    
+    #un agent est un thread qui observe et qui est observé
+    #par les autres threads
+    
+    def __init__(self, x, y, x_fin, y_fin):
+        print("Agent "+ id_agent +" was created.")
+        Observer.__init__(self)
+        Thread.__init__(self)
+        self.x = x
+        self.y = y
+        self.x_fin = x_fin
+        self.y_fin = y_fin
+
+    
+    def run(self):
+        #self.position = 
+        pass
+    
+    def start():
+        if (Thread == null | Thread.is_alive == True) : 
+            Thread.run()
+            
+    def stop() :
+        ThreadBol.set(False)
+        Thread.join(500)
         
+    def agent_is_moving(self, where):
+        print("Agent is moving to "+where)
+        
+            
+    Thread.start()
+    
+
 #def ajouterAgent(agent: Agent)
