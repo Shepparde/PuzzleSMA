@@ -1,24 +1,42 @@
 
-class Agent():
+"""
+Created on Mon Feb 21 11:01:24 2022
+
+@author: guillaume.orset-prelet
+"""
+from threading import Thread
+import random
+import time
+
+
+class Agent(Thread):
     """
-    The Subject owns some important state and notifies observers when the state
+    The Subject owns some important state and notifies observers when their position
     changes.
     """
-
+    def __init__(self,_grid,x,y,x_prev,y_prev,_symbol) -> None:
+        
+        self._grid = _grid
+        self.x=x
+        self.y=y
+        self.x_prev = x_prev
+        self.y_prev = y_prev
+        self._symbol = _symbol
+        print("Agent "+ str(id(self))[-4:] +" was created.")
+        Thread.__init__(self)
+    
     _state = None
     """
-    For the sake of simplicity, the Subject's state, essential to all
-    subscribers, is stored in this variable.
+    State : can be whether a pawn has reached the final point 
     """
 
     _observers = []
     """
-    List of subscribers. In real life, the list of subscribers can be stored
-    more comprehensively (categorized by event type, etc.).
+    List of subscribers. 
     """
 
     def attach(self, observer) -> None:
-        print("Subject: Attached an observer.")
+        print("Pawn: "+str(id(self))[-4:] +" Attached an observer.")
         self._observers.append(observer)
 
     def detach(self, observer) -> None:
@@ -30,46 +48,80 @@ class Agent():
         Trigger an update in each subscriber.
         """
 
-        print("Subject: Notifying observers...")
         for observer in self._observers:
             observer.update(self)
 
-    def some_business_logic(self) -> None:
+    def move(self,x_new,y_new) -> None:
         """
-        Usually, the subscription logic is only a fraction of what a Subject can
-        really do. Subjects commonly hold some important business logic, that
-        triggers a notification method whenever something important is about to
-        happen (or after it).
+        function to move a pawn if a box is available and that the new and previous box are close (+/-1 x,y)
         """
-
-        print("\nSubject: I'm doing something important.")
-
-        print(f"Subject: My state has just changed to: {self._state}")
-        self.notify()
+        if self._observers[0].get_position(x_new,y_new) == 0:
+            if (abs(x_new - x)<=1)&(abs(y_new - y)<=1):
+                print("Position Available")
+                print("Pawn: " + str(id(self))[-4:]+" I have changed my position from: ({},{}) to ({},{})".format(self.x,self.y,x_new,y_new))
+                self.x_prev = self.x
+                self.y_prev = self.y
+                self.x = x_new
+                self.y = y_new
+                self.notify()
+            else:
+                print("Pawn: " + str(id(self))[-4:]+" position ({},{}) to far from you".format(x_new,y_new))
+        else:
+            print("Pawn: " + str(id(self))[-4:]+" position ({},{}) not available".format(x_new,y_new))
+            
+    def run(self):
+        for i in range(20):
+            time.sleep(random.randint(0,2))
+            self.move(random.randint(0,4),random.randint(0,4))
 
 class Observer():
     """
-    The Observer interface declares the update method, used by subjects.
+    The Observer declares the update method, used by subjects.
     """
+    def __init__(self, subjects,n_rows,n_cols) -> None:
 
+        self.n_rows = n_rows
+        self.n_cols = n_cols
+        self.positions = {}
+        #create board positions and availability
+        for row in range(n_rows):
+            for col in range(n_cols):
+                 self.positions[(row,col)] = 0
+        for subject in subjects:
+            subject.attach(self)
+            self._set_position(subject.x,subject.y,subject.x_prev,subject.y_prev)
+            
+    def get_position(self,x,y) -> int:
+        return self.positions[(x,y)]
+    def _set_position(self,x,y,x_prev,y_prev) -> None :
+        
+
+        #previous position of the pawn is set to 0
+        self.positions[(x_prev,y_prev)] = 0
+        #new position of the pawn is set to 1 because box (x,y) not available anymore
+        self.positions[(x,y)] = 1
     def update(self, subject) -> None:
-        """
-        Receive update from subject.
-        """
-        pass
+        self._set_position(subject.x,subject.y,subject.x_prev,subject.y_prev)
 
 
-"""Les deux classes concreteObserver sont des observer qui réagissent à des actions particulières d'un agent
-VOIR quels sont les états que l'on peut avoir pour nos agents
-Un état peut correspondre à la position de chaque pion"""
-class ConcreteObserverA(Observer):
-    def update(self, subject) -> None:
-        if subject._state < 3:
-            print("ConcreteObserverA: Reacted to the event")
+board = "a"
+_symbol = "etoile"
+x = 0
+y=0
+x_prev = x
+y_prev=y
+
+pion = Agent(board,x,y,x_prev,y_prev,_symbol)
+pion2 = Agent(board,1,1,1,1,_symbol)
+pion3 = Agent(board,1,2,1,2,_symbol)
+pawns = [pion,pion2, pion3]
+observer = Observer(pawns,5,5)
 
 
+pion.start()
+pion2.start()
+pion3.start()
+pion.join()
+pion2.join()
+pion3.join()
 
-class ConcreteObserverB(Observer):
-    def update(self, subject) -> None:
-        if subject._state == 0 or subject._state >= 2:
-            print("ConcreteObserverB: Reacted to the event")
