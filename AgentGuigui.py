@@ -13,17 +13,19 @@ class Agent(Thread):
     The Subject owns some important state and notifies observers when their position
     changes.
     """
-    def __init__(self,x,y,x_prev,y_prev,_symbol) -> None:
+    def __init__(self,x,y,x_final,y_final,_symbol) -> None:
         
         self.x=x
         self.y=y
-        self.x_prev = x_prev
-        self.y_prev = y_prev
+        self.x_prev = x
+        self.y_prev = y
+        self.x_final = x_final
+        self.y_final = y_final
         self._symbol = _symbol
         print("Agent "+ str(id(self))[-4:] +" was created.")
         Thread.__init__(self)
     
-    _state = None
+        self._state = True
     """
     State : can be whether a pawn has reached the final point 
     """
@@ -62,6 +64,8 @@ class Agent(Thread):
                 self.x = x_new
                 self.y = y_new
                 self.notify()
+                if (self.x_final == x_new)&(self.y_final == y_new):
+                    self._state = False
             else:
                 print("Pawn: " + str(id(self))[-4:]+" position ({},{}) to far from you".format(x_new,y_new))
 
@@ -69,10 +73,10 @@ class Agent(Thread):
             print("Pawn: " + str(id(self))[-4:]+" position ({},{}) not available".format(x_new,y_new))
             
     def run(self):
-        for i in range(10):
+        while self._state:
             time.sleep(0.5)
-            top_x = self._observers[0].n_rows -1
-            top_y = self._observers[0].n_cols -1 
+            top_x = self._observers[0].n_rows - 1
+            top_y = self._observers[0].n_cols - 1 
             
             #pawn is not on any edge
             if (0<self.x<top_x)&(0<self.y<top_y):
@@ -91,9 +95,10 @@ class Agent(Thread):
                     self.move(random.randint(self.x-1,self.x),random.randint(self.y-1,self.y+1))
             #pawn is on a row edge AND not on a col edge
             else:
-                if self.x==0&self.y==0:
+                #fix problem when x==0 and y==4
+                if (self.x==0)&(self.y==0):
                     self.move(random.randint(self.x,self.x+1),random.randint(self.y,self.y+1))
-                elif self.x==0&self.y==top_y:
+                elif (self.x==0)&(self.y==top_y):
                     self.move(random.randint(self.x,self.x+1),random.randint(self.y-1,self.y))
                 elif self.y==0:
                     self.move(random.randint(self.x-1,self.x),random.randint(self.y,self.y+1))
