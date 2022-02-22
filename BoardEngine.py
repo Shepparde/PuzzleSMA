@@ -6,6 +6,7 @@ Created on Tue Feb  8 13:31:02 2022
 """
 import pygame as p
 import Board
+from AgentGuigui import Agent,Observer 
 WIDTH = HEIGHT = 512
 
 DIMENSION = 5
@@ -22,7 +23,10 @@ def main():
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     screen.fill(p.Color("white"))
-    gs=Board.BoardState()
+    pion = Agent(0,0,0,0,"étoile")
+    pawns = [pion]#,pion2, pion3]
+    observer = Observer(pawns,5,5)
+    gs=observer.board
     #print(gs.board)
     loadImages()
     running=True
@@ -30,6 +34,7 @@ def main():
         for e in p.event.get():
             if e.type == p.QUIT:
                 running=False
+        pion.start()
         drawBoardState(screen,gs)
         p.display.flip()
         
