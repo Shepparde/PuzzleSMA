@@ -56,7 +56,7 @@ class Agent(Thread):
         function to move a pawn if a box is available and that the new and previous box are close (+/-1 x,y)
         """
         if self._observers[0].get_position(x_new,y_new) == 0:
-            if (abs(x_new - x)<=1)&(abs(y_new - y)<=1):
+            if (abs(x_new - self.x)+abs(y_new - self.y))<=1:
                 print("Position Available")
                 print("Pawn: " + str(id(self))[-4:]+" I have changed my position from: ({},{}) to ({},{})".format(self.x,self.y,x_new,y_new))
                 self.x_prev = self.x
@@ -66,14 +66,41 @@ class Agent(Thread):
                 self.notify()
             else:
                 print("Pawn: " + str(id(self))[-4:]+" position ({},{}) to far from you".format(x_new,y_new))
+
         else:
             print("Pawn: " + str(id(self))[-4:]+" position ({},{}) not available".format(x_new,y_new))
             
     def run(self):
         for i in range(20):
             time.sleep(random.randint(0,2))
-            self.move(random.randint(0,4),random.randint(0,4))
-
+            top_x = self._observers[0].n_rows -1
+            top_y = self._observers[0].n_cols -1 
+            
+            #pawn is not on any edge
+            if (0<self.x<top_x)&(0<self.y<top_y):
+                self.move(random.randint(self.x-1,self.x+1),random.randint(self.y-1,self.y+1))
+            #pawn is on a col edge but not on a row edge
+            elif (0<self.x<top_x):
+                if self.y==0:
+                    self.move(random.randint(self.x-1,self.x+1),random.randint(self.y,self.y+1))
+                else:
+                    self.move(random.randint(self.x-1,self.x+1),random.randint(self.y-1,self.y))
+            #pawn is on a row edge but not on a col edge
+            elif (0<self.y<top_y):
+                if self.x==0:
+                    self.move(random.randint(self.x,self.x+1),random.randint(self.y-1,self.y+1))
+                else:
+                    self.move(random.randint(self.x-1,self.x),random.randint(self.y-1,self.y+1))
+            #pawn is on a row edge AND not on a col edge
+            else:
+                if self.x==0&self.y==0:
+                    self.move(random.randint(self.x,self.x+1),random.randint(self.y,self.y+1))
+                elif self.x==0&self.y==top_y:
+                    self.move(random.randint(self.x,self.x+1),random.randint(self.y-1,self.y))
+                elif self.y==0:
+                    self.move(random.randint(self.x-1,self.x),random.randint(self.y,self.y+1))
+                else:
+                    self.move(random.randint(self.x-1,self.x),random.randint(self.y-1,self.y))
 class Observer():
     """
     The Observer declares the update method, used by subjects.
@@ -119,9 +146,9 @@ observer = Observer(pawns,5,5)
 
 
 pion.start()
+
 pion2.start()
 pion3.start()
 pion.join()
 pion2.join()
 pion3.join()
-
