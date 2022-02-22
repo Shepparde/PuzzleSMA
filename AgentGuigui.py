@@ -8,15 +8,13 @@ from threading import Thread
 import random
 import time
 
-
 class Agent(Thread):
     """
     The Subject owns some important state and notifies observers when their position
     changes.
     """
-    def __init__(self,_grid,x,y,x_prev,y_prev,_symbol) -> None:
+    def __init__(self,x,y,x_prev,y_prev,_symbol) -> None:
         
-        self._grid = _grid
         self.x=x
         self.y=y
         self.x_prev = x_prev
@@ -71,7 +69,7 @@ class Agent(Thread):
             print("Pawn: " + str(id(self))[-4:]+" position ({},{}) not available".format(x_new,y_new))
             
     def run(self):
-        for i in range(20):
+        for i in range(10):
             time.sleep(random.randint(0,2))
             top_x = self._observers[0].n_rows -1
             top_y = self._observers[0].n_cols -1 
@@ -110,45 +108,49 @@ class Observer():
         self.n_rows = n_rows
         self.n_cols = n_cols
         self.positions = {}
+        self.board=[["--" for j in range(n_cols)] for i in range(n_rows)]
         #create board positions and availability
         for row in range(n_rows):
             for col in range(n_cols):
                  self.positions[(row,col)] = 0
         for subject in subjects:
             subject.attach(self)
-            self._set_position(subject.x,subject.y,subject.x_prev,subject.y_prev)
+            self._set_position(subject._symbol,subject.x,subject.y,subject.x_prev,subject.y_prev)
+        
             
     def get_position(self,x,y) -> int:
         return self.positions[(x,y)]
-    def _set_position(self,x,y,x_prev,y_prev) -> None :
+    def _set_position(self,symbol,x,y,x_prev,y_prev) -> None :
         
 
         #previous position of the pawn is set to 0
         self.positions[(x_prev,y_prev)] = 0
+        self.board[x_prev][y_prev] = "--"
         #new position of the pawn is set to 1 because box (x,y) not available anymore
         self.positions[(x,y)] = 1
+        self.board[x][y] = symbol
     def update(self, subject) -> None:
-        self._set_position(subject.x,subject.y,subject.x_prev,subject.y_prev)
+        self._set_position(subject._symbol,subject.x,subject.y,subject.x_prev,subject.y_prev)
 
 
-board = "a"
+"""board = "a"
 _symbol = "etoile"
 x = 0
 y=0
 x_prev = x
 y_prev=y
 
-pion = Agent(board,x,y,x_prev,y_prev,_symbol)
-pion2 = Agent(board,1,1,1,1,_symbol)
-pion3 = Agent(board,1,2,1,2,_symbol)
-pawns = [pion,pion2, pion3]
-observer = Observer(pawns,5,5)
+pion = Agent(0,0,0,0,"étoile")
+#pion2 = Agent(1,1,1,1,"sablier")
+#pion3 = Agent(1,2,1,2,"plus")
+pawns = [pion]#,pion2, pion3]
+observer = Observer(pawns,5,5)"""
 
 
-pion.start()
+#pion.start()
 
-pion2.start()
+"""pion2.start()
 pion3.start()
 pion.join()
 pion2.join()
-pion3.join()
+pion3.join()"""
