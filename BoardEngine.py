@@ -24,17 +24,22 @@ def main():
     screen = p.display.set_mode((WIDTH,HEIGHT))
     screen.fill(p.Color("white"))
     pion = Agent(0,0,0,0,"étoile")
-    pawns = [pion]#,pion2, pion3]
+    pion2 = Agent(2,1,2,1,"sablier")
+    pion3 = Agent(4,2,4,2,"plus")
+    pawns = [pion,pion2, pion3]
     observer = Observer(pawns,5,5)
     gs=observer.board
     #print(gs.board)
     loadImages()
+    pion.start()
+    pion2.start()
+    pion3.start()
     running=True
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running=False
-        pion.start()
+    
         drawBoardState(screen,gs)
         p.display.flip()
         
@@ -44,10 +49,11 @@ def main():
         
 def drawBoardState(screen,gs):
     drawBoard(screen)#draw squares on board
-    drawPieces(screen,gs.board)#draw pieces on top of squares
+    drawPieces(screen,gs)#draw pieces on top of squares
         
 def drawBoard(screen):
    colors=p.Color("black")
+   screen.fill(p.Color("white"))
    for r in range(DIMENSION):
        for c in range(DIMENSION):
            
@@ -61,7 +67,7 @@ def drawPieces(screen,board):
             piece = board[r][c]
             if piece != "--": #if not empty
                 screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
-        
+                
   
     
 if __name__ == "__main__": #import main in another file
