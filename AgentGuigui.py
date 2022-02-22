@@ -70,7 +70,7 @@ class Agent(Thread):
             
     def run(self):
         for i in range(10):
-            time.sleep(random.randint(0,2))
+            time.sleep(0.5)
             top_x = self._observers[0].n_rows -1
             top_y = self._observers[0].n_cols -1 
             
@@ -131,26 +131,3 @@ class Observer():
         self.board[x][y] = symbol
     def update(self, subject) -> None:
         self._set_position(subject._symbol,subject.x,subject.y,subject.x_prev,subject.y_prev)
-
-
-"""board = "a"
-_symbol = "etoile"
-x = 0
-y=0
-x_prev = x
-y_prev=y
-
-pion = Agent(0,0,0,0,"étoile")
-#pion2 = Agent(1,1,1,1,"sablier")
-#pion3 = Agent(1,2,1,2,"plus")
-pawns = [pion]#,pion2, pion3]
-observer = Observer(pawns,5,5)"""
-
-
-#pion.start()
-
-"""pion2.start()
-pion3.start()
-pion.join()
-pion2.join()
-pion3.join()"""
