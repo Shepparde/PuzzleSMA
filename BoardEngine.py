@@ -23,9 +23,9 @@ def main():
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     screen.fill(p.Color("white"))
-    pion = Agent(0,0,0,0,"étoile")
-    pion2 = Agent(2,1,2,1,"sablier")
-    pion3 = Agent(4,2,4,2,"plus")
+    pion = Agent(0,4,2,4,"étoile")
+    pion2 = Agent(2,1,2,3,"plus")
+    pion3 = Agent(4,2,2,2,"croix-encerclée")
     pawns = [pion,pion2, pion3]
     observer = Observer(pawns,5,5)
     gs=observer.board
