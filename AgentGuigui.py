@@ -34,7 +34,20 @@ class Agent(Thread):
     """
     List of subscribers. 
     """
-
+    """function to get the distance from new point and final point 
+    return 1 if new point is closer than current point to the final point
+    else 0"""
+    def _get_distance(self,x_new,y_new) -> int:
+        currentDistance = abs(self.x_final - self.x)+abs(self.y_final - self.y)
+        potentialDistance = abs(self.x_final - x_new)+abs(self.y_final - y_new)
+        if potentialDistance <currentDistance:
+            return 1
+        else:
+            return 0
+        
+    """Function to send a message to the observer to ask him to make other pawn moving from its path"""
+    def _sendMessage(self,x_new,y_new):
+        self._observers[0].receiveMessage(x_new,y_new)
     def attach(self, observer) -> None:
         print("Pawn: "+str(id(self))[-4:] +" Attached an observer.")
         self._observers.append(observer)
@@ -56,21 +69,29 @@ class Agent(Thread):
         function to move a pawn if a box is available and that the new and previous box are close (+/-1 x,y)
         """
         if self._observers[0].get_position(x_new,y_new) == 0:
+            print("Position Available")
             if (abs(x_new - self.x)+abs(y_new - self.y))<=1:
-                print("Position Available")
-                print("Pawn: " + str(id(self))[-4:]+" I have changed my position from: ({},{}) to ({},{})".format(self.x,self.y,x_new,y_new))
-                self.x_prev = self.x
-                self.y_prev = self.y
-                self.x = x_new
-                self.y = y_new
-                self.notify()
+                if self._get_distance(x_new,y_new)==1:
+                    print("Pawn: " + str(id(self))[-4:]+" I have changed my position from: ({},{}) to ({},{})".format(self.x,self.y,x_new,y_new))
+                    self.x_prev = self.x
+                    self.y_prev = self.y
+                    self.x = x_new
+                    self.y = y_new
+                    self.notify()
+                else:
+                    print("Position not closer to the final point")
                 if (self.x_final == x_new)&(self.y_final == y_new):
+                    print("Final Point Reached")
                     self._state = False
             else:
-                print("Pawn: " + str(id(self))[-4:]+" position ({},{}) to far from you".format(x_new,y_new))
+                print("Pawn: " + str(id(self))[-4:]+" position ({},{}) too far from you".format(x_new,y_new))
 
         else:
             print("Pawn: " + str(id(self))[-4:]+" position ({},{}) not available".format(x_new,y_new))
+            if (abs(x_new - self.x)+abs(y_new - self.y))<=1:
+                if self._get_distance(x_new,y_new)==1:
+                    self._sendMessage(x_new,y_new)
+                    print("message sent")
             
     def run(self):
         while self._state:
@@ -104,6 +125,10 @@ class Agent(Thread):
                     self.move(random.randint(self.x-1,self.x),random.randint(self.y,self.y+1))
                 else:
                     self.move(random.randint(self.x-1,self.x),random.randint(self.y-1,self.y))
+
+
+
+
 class Observer():
     """
     The Observer declares the update method, used by subjects.
@@ -112,16 +137,22 @@ class Observer():
 
         self.n_rows = n_rows
         self.n_cols = n_cols
+        self.subjects=subjects
         self.positions = {}
         self.board=[["--" for j in range(n_cols)] for i in range(n_rows)]
         #create board positions and availability
         for row in range(n_rows):
             for col in range(n_cols):
                  self.positions[(row,col)] = 0
-        for subject in subjects:
+        for subject in  self.subjects:
             subject.attach(self)
             self._set_position(subject._symbol,subject.x,subject.y,subject.x_prev,subject.y_prev)
-        
+    
+    def receiveMessage(self,x_new,y_new):
+        for subject in self.subjects:
+            if (subject.x_final==x_new)&(subject.y_final==y_new):
+                subject._state = True
+                subject.run()
             
     def get_position(self,x,y) -> int:
         return self.positions[(x,y)]
