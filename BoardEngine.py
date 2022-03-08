@@ -6,6 +6,7 @@ Created on Tue Feb  8 13:31:02 2022
 """
 import pygame as p
 import Board
+import time
 from AgentGuigui import Agent,Observer 
 WIDTH = HEIGHT = 512
 
@@ -23,17 +24,20 @@ def main():
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     screen.fill(p.Color("white"))
-    pion = Agent(0,4,2,4,"étoile")
-    pion2 = Agent(2,1,2,3,"plus")
-    pion3 = Agent(4,2,2,2,"croix-encerclée")
-    pawns = [pion,pion2, pion3]
+    pion = Agent(0,0,2,4,"étoile")
+    pion2 = Agent(0,1,2,2,"plus")
+    pion3 = Agent(0,2,1,3,"croix-encerclée")
+    #pion4 = Agent(4,2,1,2,"étoile")
+    #pion5 = Agent(4,1,1,4,"plus")
+    pawns = [pion,pion2, pion3]#,pion4,pion5]
     observer = Observer(pawns,5,5)
     gs=observer.board
-    #print(gs.board)
     loadImages()
     pion.start()
     pion2.start()
     pion3.start()
+    #pion4.start()
+    #pion5.start()
     running=True
     while running:
         for e in p.event.get():
