@@ -27,17 +27,17 @@ def main():
     pion = Agent(0,0,2,4,"étoile")
     pion2 = Agent(0,1,2,2,"plus")
     pion3 = Agent(0,2,1,3,"croix-encerclée")
-    #pion4 = Agent(4,2,1,2,"étoile")
-    #pion5 = Agent(4,1,1,4,"plus")
-    pawns = [pion,pion2, pion3]#,pion4,pion5]
+    pion4 = Agent(4,2,1,2,"étoile")
+    pion5 = Agent(4,1,1,4,"plus")
+    pawns = [pion,pion2, pion3,pion4,pion5]
     observer = Observer(pawns,5,5)
     gs=observer.board
     loadImages()
     pion.start()
     pion2.start()
     pion3.start()
-    #pion4.start()
-    #pion5.start()
+    pion4.start()
+    pion5.start()
     running=True
     while running:
         for e in p.event.get():
@@ -48,9 +48,6 @@ def main():
         p.display.flip()
         
 
-        
-        
-        
 def drawBoardState(screen,gs):
     drawBoard(screen)#draw squares on board
     drawPieces(screen,gs)#draw pieces on top of squares
