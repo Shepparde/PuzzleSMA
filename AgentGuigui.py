@@ -23,7 +23,7 @@ class Agent(Thread):
         self.x_final = x_final
         self.y_final = y_final
         self._symbol = _symbol
-        print("Agent "+ str(id(self))[-4:] +" was created.")
+        print("Agent "+ self._symbol +" was created.")
         Thread.__init__(self)
     
         self.hasMovedFromFinalPoint = 0
@@ -55,15 +55,29 @@ class Agent(Thread):
 
         #print("Agent "+ str(id(self))[-4:] + " message received")
         worstChoices = self._getWorstPositions(from_subject.x_final,from_subject.y_final)
-        worst=random.choice(worstChoices)
-        hasMoved=0
-        if self._observers[0].get_position(worst[0],worst[1])==0:
-            self.move(worst[0],worst[1])
-            hasMoved=1
-            print("moves from path of another Pawn from ",self.x_prev," ",self.y_prev," to ",self.x," ",self.y )
-            return 1
-        if hasMoved==0:
-            print("Ask again to see if the pawn can move")
+        try:
+            worst=random.choice(worstChoices)
+            hasMoved=0
+            if self._observers[0].get_position(worst[0],worst[1])==0:
+                self.move(worst[0],worst[1])
+                
+                hasMoved=1
+                #print("moves from path of another Pawn from ",self.x_prev," ",self.y_prev," to ",self.x," ",self.y )
+                return 1
+            if hasMoved==0:
+                print("Ask again to see if the pawn can move")
+                for subject in self._observers[0].subjects:
+                    if (subject.x==worst[0])&(subject.y==worst[1]):
+                        message = self._sendMessage(self,subject)
+                        if message==1:
+                            self.move(worst[0],worst[1])
+                        else:
+                            print("this pawn cannot move from his final position for now")
+                        break
+                    else:
+                        pass
+                return 0
+        except:
             return 0
 
 
@@ -106,7 +120,7 @@ class Agent(Thread):
         return worstPositions
     
     def attach(self, observer) -> None:
-        print("Pawn: "+str(id(self))[-4:] +" Attached an observer.")
+        print("Pawn: "+self._symbol +" Attached an observer.")
         self._observers.append(observer)
         self.top_x = self._observers[0].n_rows - 1
         self.top_y = self._observers[0].n_cols - 1 
@@ -132,12 +146,13 @@ class Agent(Thread):
         self.x = x_new
         self.y = y_new
         self.notify()
-        print("Pawn: " +str(id(self))[-4:]+" I have changed my position from: ({},{}) to ({},{})".format(self.x_prev,self.y_prev,x_new,y_new))
+        print("Pawn: " +self._symbol+" I have changed my position from: ({},{}) to ({},{})".format(self.x_prev,self.y_prev,x_new,y_new))
 
         
     def run(self):
+        time.sleep(int(self._symbol)*4)         
         while self._observers[0].global_state:
-            time.sleep(random.randint(1,4))
+            time.sleep(random.uniform(0.2,1.4))
             if (self.x,self.y)!=(self.x_final,self.y_final):
 
                 bestChoices = self._getBestPositions()
@@ -149,7 +164,7 @@ class Agent(Thread):
                 else:
                     #print("Position Finally not available")
                     for subject in self._observers[0].subjects:
-                        if (subject.x_final==best[0])&(subject.y_final==best[1]):
+                        if (subject.x==best[0])&(subject.y==best[1]):
                             message = self._sendMessage(self,subject)
                             if message==1:
                                 self.move(best[0],best[1])

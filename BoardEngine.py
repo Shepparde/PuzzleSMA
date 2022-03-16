@@ -16,7 +16,7 @@ MAX_FPS = 15
 IMAGES = {}
 
 def loadImages():
-    pieces=["sablier","croix-encerclée","plus","étoile"]
+    pieces=["1","2","3","4","5","6","7","8","9","10"]
     for piece in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("images/"+piece+".png"),(SQ_SIZE,SQ_SIZE))
                                           
@@ -24,12 +24,17 @@ def main():
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
     screen.fill(p.Color("white"))
-    pion = Agent(0,0,2,4,"étoile")
-    pion2 = Agent(0,1,2,2,"plus")
-    pion3 = Agent(0,2,1,3,"croix-encerclée")
-    pion4 = Agent(4,2,1,2,"étoile")
-    pion5 = Agent(4,1,1,4,"plus")
-    pawns = [pion,pion2, pion3,pion4,pion5]
+    pion = Agent(3,4,0,0,"1")
+    pion2 = Agent(3,3,0,1,"2")
+    pion3 = Agent(3,2,0,2,"3")
+    pion4 =Agent(4,1,0,3,"4")
+    pion5 = Agent(4,2,0,4,"5")
+    pion6 = Agent(2,1,1,0,"6")   
+    pion7 = Agent(2,2,1,1,"7")
+    pion8 = Agent(1,4,1,2,"8") 
+    pion9 = Agent(0,2,1,3,"9")
+    pion10 = Agent(4,4,1,4,"10") 
+    pawns = [pion,pion2, pion3,pion4,pion5,pion6,pion7,pion8,pion9,pion10]
     observer = Observer(pawns,5,5)
     gs=observer.board
     loadImages()
@@ -38,6 +43,11 @@ def main():
     pion3.start()
     pion4.start()
     pion5.start()
+    pion6.start()
+    pion7.start()
+    pion8.start()
+    pion9.start()
+    pion10.start()
     running=True
     while running:
         for e in p.event.get():
