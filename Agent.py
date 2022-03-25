@@ -1,85 +1,259 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb  8 11:22:01 2022
 
-@author: Administrator
 """
-import random 
-import SymbolGenerator
+Created on Mon Feb 21 11:01:24 2022
+
+@author: guillaume.orset-prelet
+"""
 from threading import Thread
+import random
 import time
-import Board
-
-class Observer():
-    _observers = []
-    def __init__(self):
-        #Creation d'une liste d'observers
-        self._observers.append(self)
-        self._observables = {}
+from queue import Queue
+import threading
+class Agent(Thread):
+    """
+    The Subject owns some important state and notifies observers when their position
+    changes.
+    """
+    def __init__(self,x,y,x_final,y_final,_symbol) -> None:
         
-    def observe(self, event_name, callback):
-        self._observables[event_name] = callback
-        
-    def notify(self, modifier = None):
-        # Notification des observers
-        for observer in self._observers:
-            observer.update(self)
-            
-    def attach(self, observer):
-        # si l'observer n'est pas dans la 
-        # liste d'observers, on le rajoute à la liste
-        if observer not in self._oberservers : 
-            self._observers.append(observer)
-                
-    def detach(self, observer):
-        # supprimer l'observer de la liste
-        try : 
-            self._observers.remove(observer)
-        except ValueError : 
-            pass
-
-# Event quand l'agent se déplace
-class Event():
-    def __init__(self, name, data, autofire = True):
-        self.name = name
-        self.data = data
-        if autofire:
-            self.fire()
-    def fire(self):
-        for observer in Observer._observers:
-            if self.name in observer._observables:
-                observer._observables[self.name](self.data)  
-
-class Agent(Observer, Thread) :
-
-    def __init__(self, _grid, _id, _symbol, x_init, y_init, x, y, x_fin, y_fin):
-        self._grid = _grid
-        self._id = _id
+        self.x=x
+        self.y=y
+        self.x_prev = x
+        self.y_prev = y
+        self.x_final = x_final
+        self.y_final = y_final
         self._symbol = _symbol
-        self.x_init = x_init
-        self.y_init = y_init
-        self.x = x
-        self.y = y
-        self.x_fin = x_fin
-        self.y_fin = y_fin
-        print("Agent "+ _id +" was created.")
-        Observer.__init__(self)
+        print("Agent "+ self._symbol +" was created.")
         Thread.__init__(self)
     
-    def start():
-        Thread.start()
-            
-    def stop() :
-        Thread.terminate()
-        
-    def agent_is_moving(self, where):
-        print("Agent is moving to "+where)
-        
-    def run():
-        if Thread.is_alive == True : 
-            Thread.run()
-    
-    Thread.start()
-    
+        self.hasMovedFromFinalPoint = 0
+    """
+    State : can be whether a pawn has reached the final point 
+    """
 
-#def ajouterAgent(agent: Agent)
+    _observers = []
+    """
+    List of subscribers. 
+    """
+    """function to get the distance from new point and final point 
+    return 1 if new point is closer than current point to the final point
+    else 0"""
+    def _get_distance(self,x_new,y_new,x_target,y_target) -> int:
+        currentDistance = abs(x_target - self.x)+abs(y_target - self.y)
+        potentialDistance = abs(x_target - x_new)+abs(y_target - y_new)
+        if potentialDistance <currentDistance:
+            return 1
+        else:
+            return 0
+        
+    """Function to send a message to the observer to ask him to make other pawn moving from its path"""
+    def _sendMessage(self,from_subject,to_subject):
+        print("Agent "+ self._symbol + " message sent to agent " + to_subject._symbol)
+        to_subject.receiveMessage(from_subject)
+        
+    def receiveMessage(self,from_subject) -> int:
+
+        print("Agent "+ self._symbol+ " message received")
+        worstChoices = self._getWorstPositions(from_subject.x_final,from_subject.y_final)
+        random.shuffle(worstChoices)
+        availablePositions = self._getAvailablesPositions()
+        for worst in worstChoices:
+            if (worst[0]==from_subject.x)&(worst[1]==from_subject.y):
+                worstChoices.remove(worst)
+        hasMoved=0
+        for worst in worstChoices:
+            print("Agent "+ self._symbol+ " trying position " + str(worst[0])+" , "+str(worst[1]))
+            if self._observers[0].get_position(worst[0],worst[1])==0:
+                self.move(worst[0],worst[1])
+
+                hasMoved=1
+                #print("moves from path of another Pawn from ",self.x_prev," ",self.y_prev," to ",self.x," ",self.y )
+                return 1
+        if hasMoved==0:
+            if len(availablePositions)!=0:
+                freeMove =  random.choice(availablePositions)
+                self.move(freeMove[0],freeMove[1])
+                hasMoved=1
+        if len(worstChoices)!=0:
+            worst = random.choice(worstChoices)
+            if hasMoved==0:
+                for subject in self._observers[0].subjects:
+                    if (subject.x==worst[0])&(subject.y==worst[1]):
+                        message = self._sendMessage(self,subject)
+                        if message==1:
+                            if self._observers[0].get_position(worst[0],worst[1])==0:
+                                self.move(worst[0],worst[1])
+                        else:
+                            print("Agent "+ self._symbol+" cannot move from his position for now")
+                        break
+                    else:
+                        pass
+                return 0
+        else:
+            return 0
+
+    def _getAvailablesPositions(self)  -> list:
+        availablePositions = []
+        if (self.x<self.top_x):
+            if self._observers[0].get_position(self.x+1,self.y)==0:
+                availablePositions.append((self.x+1,self.y))
+        if (self.x>0):
+            if self._observers[0].get_position(self.x-1,self.y)==0:
+                availablePositions.append((self.x-1,self.y))
+        if (self.y<self.top_y):
+            if self._observers[0].get_position(self.x,self.y+1)==0:
+                availablePositions.append((self.x,self.y+1))
+        if (self.y>0):
+            if self._observers[0].get_position(self.x,self.y-1)==0:
+                availablePositions.append((self.x,self.y-1))
+
+        return availablePositions
+    
+    def _getBestPositions(self) -> list:
+        bestPositions = []
+
+        if (self.x<self.top_x):
+            if self._get_distance(self.x+1,self.y,self.x_final,self.y_final)==1:
+                bestPositions.append((self.x+1,self.y))
+        if (self.x>0):
+            if self._get_distance(self.x-1,self.y,self.x_final,self.y_final)==1:
+                bestPositions.append((self.x-1,self.y))
+        if (self.y<self.top_y):
+            if self._get_distance(self.x,self.y+1,self.x_final,self.y_final)==1:
+                bestPositions.append((self.x,self.y+1))
+        if (self.y>0):
+            if self._get_distance(self.x,self.y-1,self.x_final,self.y_final)==1:
+                bestPositions.append((self.x,self.y-1))
+        if len(bestPositions)==0:
+            print("vide avec coord ",self.x," ",self.y)
+        return bestPositions
+
+            
+    def _getWorstPositions(self,x_final_other_pawn,y_final_other_pawn) -> list:
+        worstPositions = []
+
+        if (self.x<self.top_x):
+            if self._get_distance(self.x+1,self.y,x_final_other_pawn,y_final_other_pawn)==0:
+                worstPositions.append((self.x+1,self.y))
+        if (self.x>0):
+            if self._get_distance(self.x-1,self.y,x_final_other_pawn,y_final_other_pawn)==0:
+                worstPositions.append((self.x-1,self.y))
+        if (self.y<self.top_y):
+            if self._get_distance(self.x,self.y+1,x_final_other_pawn,y_final_other_pawn)==0:
+                worstPositions.append((self.x,self.y+1))
+        if (self.y>0):
+            if self._get_distance(self.x,self.y-1,x_final_other_pawn,y_final_other_pawn)==0:
+                worstPositions.append((self.x,self.y-1))
+
+        return worstPositions
+    
+    def attach(self, observer) -> None:
+        print("Pawn: "+self._symbol +" Attached an observer.")
+        self._observers.append(observer)
+        self.top_x = self._observers[0].n_rows - 1
+        self.top_y = self._observers[0].n_cols - 1 
+
+    def detach(self, observer) -> None:
+        self._observers.remove(observer)
+
+
+    def notify(self) -> None:
+        """
+        Trigger an update in each subscriber.
+        """
+
+        for observer in self._observers:
+            observer.update(self)
+
+    def move(self,x_new,y_new) -> None:
+        """
+        function to move a pawn if a box is available and that the new and previous box are close (+/-1 x,y)
+        """
+        self.x_prev = self.x
+        self.y_prev = self.y
+        self.x = x_new
+        self.y = y_new
+        self.notify()
+        print("Pawn: " +self._symbol+" I have changed my position from: ({},{}) to ({},{})".format(self.x_prev,self.y_prev,x_new,y_new))
+
+        
+    def run(self):
+
+        time.sleep(int(self._symbol)*15)
+        while self._observers[0].global_state:
+            time.sleep(random.uniform(0.2,1.4))
+            if (self.x,self.y)!=(self.x_final,self.y_final):
+
+                bestChoices = self._getBestPositions()
+                random.shuffle(bestChoices)
+                hasMoved=0
+                for best in bestChoices:
+                    #Check if the position is still available
+                    availability =self._observers[0].get_position(best[0],best[1])
+                    if availability==0:
+                        self.move(best[0],best[1])
+                        hasMoved=1
+                        break
+                if hasMoved==0:
+                    #print("Position Finally not available")
+                    for subject in self._observers[0].subjects:
+                        if (subject.x==best[0])&(subject.y==best[1]):
+                            message = self._sendMessage(self,subject)
+                            if message==1:
+                                self.move(best[0],best[1])
+                            else:
+                                print("Agent "+subject._symbol+ " cannot move from his position for now, message sent")
+                            break
+                        else:
+                            pass
+                   
+            if self._observers[0].board==self._observers[0].final_board:
+                print("Final Global State Reached")
+                self._observers[0].global_state = False
+                     
+            
+
+
+class Observer():
+    """
+    The Observer declares the update method, used by subjects.
+    """
+    def __init__(self, subjects,n_rows,n_cols) -> None:
+
+        self.n_rows = n_rows
+        self.n_cols = n_cols
+        self.subjects=subjects
+        self.positions = {}
+        self.global_state = True
+        self.board=[["--" for j in range(n_cols)] for i in range(n_rows)]
+        self.final_board=[["--" for j in range(n_cols)] for i in range(n_rows)]
+
+        #create board positions and availability
+        for row in range(n_rows):
+            for col in range(n_cols):
+                 self.positions[(row,col)] = 0
+        for subject in  self.subjects:
+            subject.attach(self)
+            self._set_position(subject._symbol,subject.x,subject.y,subject.x_prev,subject.y_prev)
+            self._set_final_positions(subject)
+        print(self.final_board)
+
+    def get_position(self,x,y) -> int:
+
+        return self.positions[(x,y)]
+       
+    def _set_position(self,symbol,x,y,x_prev,y_prev) -> None :
+        
+        #previous position of the pawn is set to 0
+        self.positions[(x_prev,y_prev)] = 0
+        self.board[x_prev][y_prev] = "--"
+        #new position of the pawn is set to 1 because box (x,y) not available anymore
+        self.positions[(x,y)] = 1
+        self.board[x][y] = symbol
+        
+    #set_position for final board
+    def _set_final_positions(self,subject) -> None :
+        self.final_board[subject.x_final][subject.y_final] = subject._symbol
+        
+    def update(self, subject) -> None:
+        self._set_position(subject._symbol,subject.x,subject.y,subject.x_prev,subject.y_prev)
